@@ -1,25 +1,77 @@
+
+```{r }
+```{r}
+#unzip and Loading the data
+unzip("repdata-data-activity.zip")
+activity <- read.csv("activity.csv")
+
+#What is mean total number of steps taken per day?
+#Calculate the total number of steps taken per day
+steps.date <- aggregate(steps ~ date, data = activity, FUN = sum)
+barplot(steps.date$steps, names.arg = steps.date$date, xlab = "date", ylab = "steps")
+#Calculate and report the mean and median total number of steps taken per day
+mean(steps.date$steps)
+mean(steps.date$steps)
+#What is the average daily activity pattern?
+#Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+steps.interval <- aggregate(steps ~ interval, data = activity, FUN = mean)
+plot(steps.interval, type = "l")
+
+
+#Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+steps.interval$interval[which.max(steps.interval$steps)]
+
+#Imputing missing values
+#Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+sum(is.na(activity))
+
+#Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+#I will use the means for the 5-minute intervals.
+
+#Create a new dataset that is equal to the original dataset but with the missing data filled in.
+activity <- merge(activity, steps.interval, by = "interval", suffixes = c("", 
+                                                                          ".y"))
+nas <- is.na(activity$steps)
+activity$steps[nas] <- activity$steps.y[nas]
+activity <- activity[, c(1:3)]
+#Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+steps.date <- aggregate(steps ~ date, data = activity, FUN = sum)
+barplot(steps.date$steps, names.arg = steps.date$date, xlab = "date", ylab = "steps")
+mean(steps.date$steps)
+median(steps.date$steps)
+#The impact of the missing data seems rather low, at least when estimating the total number of steps per day.
+#Are there differences in activity patterns between weekdays and weekends?
+#Create a new factor variable in the dataset with two levels -- "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
+
+activity$date <- as.Date(strptime(activity$date, format="%Y-%m-%d")) # convert date to a date() class variable  
+activity$day <- weekdays(activity$date)                              # build a 'day' factor to hold weekday / weekend  
+for (i in 1:nrow(activity)) {                                       # for each day  
+  if (activity[i,]$day %in% c("Saturday","Sunday")) {             # if Saturday or Sunday,
+    activity[i,]$day<-"weekend"                                 #   then 'weekend'
+  }
+  else{
+    activity[i,]$day<-"weekday"                                 #    else 'weekday'
+  }
+}
+
+## aggregate activity by steps as a function of interval + day  
+stepsByDay <- aggregate(activity$steps ~ activity$interval + activity$day, activity, mean)
+
+## reset the column names to be pretty & clean
+names(stepsByDay) <- c("interval", "day", "steps")
+
+## plot weekday over weekend time series
+par(mfrow=c(1,1))  
+with(stepsByDay, plot(steps ~ interval, type="n", main="Weekday vs. Weekend Avg."))  
+with(stepsByDay[stepsByDay$day == "weekday",], lines(steps ~ interval, type="l", col="chocolate"))  
+with(stepsByDay[stepsByDay$day == "weekend",], lines(steps ~ interval, type="l", col="16" ))  
+legend("topright", lty=c(1,1), col = c("chocolate", "16"), legend = c("weekday", "weekend"), seg.len=3)
+```
+```
+
+
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "PA1_template.R"
+author: "17486"
+date: "Sun Oct 18 22:22:08 2015"
 ---
-
-
-## Loading and preprocessing the data
-
-
-
-## What is mean total number of steps taken per day?
-
-
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
